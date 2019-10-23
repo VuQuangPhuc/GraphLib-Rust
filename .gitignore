@@ -1,2 +1,5 @@
 /target
 **/*.rs.bk
+
+/test_data
+/test_data/**
