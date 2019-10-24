@@ -82,30 +82,33 @@ impl Graph {
 
         let mut connections: Vec<Vec<VertexId>> = Vec::new();
 
+        let now = Instant::now();
+
         for vertex in &self.vertices {
             if !visited.contains(&vertex.id()) {
-                connections.push(self.visit_forward(&mut visited, vertex));
+                let mut connected: Vec<VertexId> = Vec::new();
+                self.visit_forward(&mut visited, vertex, &mut connected);
+                connections.push(connected)
             }
         };
+        println!("{}", now.elapsed().as_micros());
+
+        println!("Found {} connections.", connections.len());
 
         let strong_connections: Vec<Vec<VertexId>> = Vec::new();
         strong_connections
     }
 
-    fn visit_forward(&self, visited: &mut Vec<VertexId>, vertex: &Vertex) -> Vec<VertexId> {
+    fn visit_forward(&self, visited: &mut Vec<VertexId>, vertex: &Vertex, connected: &mut Vec<VertexId>) -> () {
         visited.push(*vertex.id());
-        let neighbors = self.get_neighbours(vertex);
-        let mut connected: Vec<VertexId> = Vec::new();
-        connected.push(vertex.id().clone());
+        let mut neighbors: Vec<&Vertex> = self.get_neighbours(vertex);
+        connected.push(*vertex.id());
 
         for neighbor in neighbors {
-            if !visited.contains(&neighbor.id()) {
-                let mut rest = self.visit_forward(visited, neighbor);
-                connected.append(& mut rest)
+            if !visited.contains(neighbor.id()) {
+                self.visit_forward(visited, neighbor, connected);
             }
         };
-
-        connected
     }
 
     fn get_neighbours(&self, vertex: &Vertex) -> Vec<&Vertex> {
