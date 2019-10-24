@@ -30,7 +30,7 @@ impl Edge {
         &self.vertex_b
     }
 
-    fn get_other_vertex(&self, vertex: VertexId) -> &VertexId {
+    pub fn get_other_vertex(&self, vertex: VertexId) -> &VertexId {
         if self.vertex_a == vertex {
             &self.vertex_b
         } else {

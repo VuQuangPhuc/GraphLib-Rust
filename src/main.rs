@@ -13,7 +13,8 @@ fn main() -> io::Result<()> {
     for f in args {
         println!("---------------------------------------");
         let file = File::open(f)?;
-        graph::create_graph(file);
+        let graph = graph::create_graph(file);
+        graph.find_strong_connections();
     }
 
     Ok(())

@@ -28,11 +28,6 @@ impl Vertex {
         self.edges.len()
     }
 
-    fn get_edge(&self, edge_id: EdgeId) -> &EdgeId {
-        assert!(self.edges.len() > edge_id);
-        &self.edges[edge_id]
-    }
-
     pub fn add_edge(& mut self, id: EdgeId) -> () {
         self.edges.push(id);
     }

@@ -75,4 +75,45 @@ impl Graph {
     fn get_free_edge_id(&self) -> EdgeId {
         self.edges.len() as EdgeId
     }
+
+    pub fn find_strong_connections(&self) -> Vec<Vec<VertexId>> {
+        let mut index = 0;
+        let mut visited: Vec<VertexId> = Vec::new();
+
+        let mut connections: Vec<Vec<VertexId>> = Vec::new();
+
+        for vertex in &self.vertices {
+            if !visited.contains(&vertex.id()) {
+                connections.push(self.visit_forward(&mut visited, vertex));
+            }
+        };
+
+        let strong_connections: Vec<Vec<VertexId>> = Vec::new();
+        strong_connections
+    }
+
+    fn visit_forward(&self, visited: &mut Vec<VertexId>, vertex: &Vertex) -> Vec<VertexId> {
+        visited.push(*vertex.id());
+        let neighbors = self.get_neighbours(vertex);
+        let mut connected: Vec<VertexId> = Vec::new();
+        connected.push(vertex.id().clone());
+
+        for neighbor in neighbors {
+            if !visited.contains(&neighbor.id()) {
+                let mut rest = self.visit_forward(visited, neighbor);
+                connected.append(& mut rest)
+            }
+        };
+
+        connected
+    }
+
+    fn get_neighbours(&self, vertex: &Vertex) -> Vec<&Vertex> {
+        let neighbours: Vec<&Vertex> = vertex.edges()
+            .iter()
+            .map(|&x| self.edges[x].get_other_vertex(*vertex.id()))
+            .map(|&x| &self.vertices[x])
+            .collect();
+        neighbours
+    }
 }
