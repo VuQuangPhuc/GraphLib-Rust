@@ -1,11 +1,10 @@
-#![allow(dead_code)]
-
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
 use crate::graph::vertex::{VertexId, Vertex};
 use crate::graph::edge::{EdgeId, Edge};
+use std::collections::HashSet;
 
 mod vertex;
 mod edge;
@@ -78,7 +77,7 @@ impl Graph {
 
     pub fn find_strong_connections(&self) -> Vec<Vec<VertexId>> {
         let mut index = 0;
-        let mut visited: Vec<VertexId> = Vec::new();
+        let mut visited: HashSet<VertexId> = HashSet::new();
 
         let mut connections: Vec<Vec<VertexId>> = Vec::new();
 
@@ -99,14 +98,14 @@ impl Graph {
         strong_connections
     }
 
-    fn visit_forward(&self, visited: &mut Vec<VertexId>, vertex: &Vertex, connected: &mut Vec<VertexId>) -> () {
-        visited.push(*vertex.id());
+    fn visit_forward(&self, visited: &mut HashSet<VertexId>, vertex: &Vertex, connected: &mut Vec<VertexId>) -> () {
+        visited.insert(*vertex.id());
         let mut neighbors: Vec<&Vertex> = self.get_neighbours(vertex);
         connected.push(*vertex.id());
 
         for neighbor in neighbors {
             if !visited.contains(neighbor.id()) {
-                self.visit_forward(visited, neighbor, connected);
+                self.visit_forward(visited, neighbor, connected)
             }
         };
     }
