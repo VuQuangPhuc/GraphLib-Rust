@@ -1,121 +1,77 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 use std::time::Instant;
-use crate::graph::vertex::{VertexId, Vertex};
-use crate::graph::edge::{EdgeId, Edge};
-use std::collections::HashSet;
+
+use crate::graph::edge::Edge;
+use crate::graph::private_graph::PrivateGraph;
+use crate::graph::ugraph::UndirectedGraph;
+use crate::graph::vertex::{Vertex, VertexId};
 
 mod vertex;
 mod edge;
 
-pub fn create_graph(file: File) -> Graph {
+pub mod ugraph;
+
+pub fn create_undirected_graph(file: File) -> UndirectedGraph {
     let now = Instant::now();
-    let graph = Graph::read_from_file(&file);
+    let graph: UndirectedGraph = Graph::read_from_file(&file);
     println!("{}", now.elapsed().as_micros());
 
     graph
 }
 
-#[derive(Debug)]
-pub struct Graph {
-    vertices: Vec<Vertex>,
-    edges: Vec<Edge>,
+pub trait Graph {
+    fn read_from_file(file: &File) -> Self;
+    fn find_strong_connected_components(&self) -> ();
 }
 
-impl Graph {
-    fn read_from_file(file: &File) -> Self {
-        let reader = BufReader::new(file);
+mod private_graph {
+    use crate::graph::edge::{Edge, EdgeId};
+    use crate::graph::vertex::{Vertex, VertexId};
 
-        let mut graph: Graph = Graph {
-            vertices: Vec::new(),
-            edges: Vec::new(),
-        };
+    pub trait PrivateGraph {
+        fn get_vertices(&self) -> &Vec<Vertex>;
+        fn get_edges(&self) -> &Vec<Edge>;
 
-        let mut first = true;
-        for line in reader.lines().filter_map(io::Result::ok) {
-            if first {
-                let count: i32 = line.parse().unwrap();
-                for _ in 0..count {
-                    graph.add_vertex();
-                }
-                first = false;
-            } else {
-                let vertices = line.trim().split(' ').flat_map(str::parse::<VertexId>).collect::<Vec<_>>();
-                graph.add_edge(vertices[0], vertices[1]);
-            }
+        fn get_vertices_as_mut(&mut self) -> &mut Vec<Vertex>;
+        fn get_edges_as_mut(&mut self) -> &mut Vec<Edge>;
+
+        fn get_free_vertex_id(&mut self) -> VertexId {
+            self.get_vertices().len() as VertexId
         }
 
-        graph
-    }
+        fn get_free_edge_id(&mut self) -> EdgeId {
+            self.get_edges().len() as EdgeId
+        }
 
-    fn add_vertex(&mut self) -> VertexId {
-        let id = self.get_free_vertex_id();
-        let vertex = Vertex::new(id, Vec::new());
-        self.vertices.push(vertex);
+        fn get_neighbours(&self, vertex: &Vertex) -> Vec<&Vertex> {
+            let neighbours: Vec<&Vertex> = vertex.edges()
+                .iter()
+                .map(|&x| self.get_edges()[x].get_other_vertex(*vertex.id()))
+                .map(|&x| &self.get_vertices()[x])
+                .collect();
+            neighbours
+        }
 
-        id
-    }
+        fn add_vertex(&mut self) -> VertexId {
+            let id = self.get_free_vertex_id();
+            let vertex = Vertex::new(id, Vec::new());
+            self.get_vertices_as_mut().push(vertex);
 
-    fn add_edge(&mut self, vertex_a: VertexId, vertex_b: VertexId) -> EdgeId {
-        let id = self.get_free_edge_id();
-        let edge = Edge::new(id, vertex_a, vertex_b);
-        self.vertices[vertex_a].add_edge(id);
-        self.vertices[vertex_b].add_edge(id);
-        self.edges.push(edge);
+            id
+        }
 
-        id
-    }
+        fn add_edge(&mut self, vertex_a: VertexId, vertex_b: VertexId) -> EdgeId {
+            let id = self.get_free_edge_id();
+            let edge = Edge::new(id, vertex_a, vertex_b);
+            self.get_vertices_as_mut()[vertex_a].add_edge(id);
+            self.get_vertices_as_mut()[vertex_b].add_edge(id);
+            self.get_edges_as_mut().push(edge);
 
-    fn get_free_vertex_id(&self) -> VertexId {
-        self.vertices.len() as VertexId
-    }
-
-    fn get_free_edge_id(&self) -> EdgeId {
-        self.edges.len() as EdgeId
-    }
-
-    pub fn find_strong_connections(&self) -> Vec<Vec<VertexId>> {
-        let mut index = 0;
-        let mut visited: HashSet<VertexId> = HashSet::new();
-
-        let mut connections: Vec<Vec<VertexId>> = Vec::new();
-
-        let now = Instant::now();
-
-        for vertex in &self.vertices {
-            if !visited.contains(&vertex.id()) {
-                let mut connected: Vec<VertexId> = Vec::new();
-                self.visit_forward(&mut visited, vertex, &mut connected);
-                connections.push(connected)
-            }
-        };
-        println!("{}", now.elapsed().as_micros());
-
-        println!("Found {} connections.", connections.len());
-
-        let strong_connections: Vec<Vec<VertexId>> = Vec::new();
-        strong_connections
-    }
-
-    fn visit_forward(&self, visited: &mut HashSet<VertexId>, vertex: &Vertex, connected: &mut Vec<VertexId>) -> () {
-        visited.insert(*vertex.id());
-        let mut neighbors: Vec<&Vertex> = self.get_neighbours(vertex);
-        connected.push(*vertex.id());
-
-        for neighbor in neighbors {
-            if !visited.contains(neighbor.id()) {
-                self.visit_forward(visited, neighbor, connected)
-            }
-        };
-    }
-
-    fn get_neighbours(&self, vertex: &Vertex) -> Vec<&Vertex> {
-        let neighbours: Vec<&Vertex> = vertex.edges()
-            .iter()
-            .map(|&x| self.edges[x].get_other_vertex(*vertex.id()))
-            .map(|&x| &self.vertices[x])
-            .collect();
-        neighbours
+            id
+        }
     }
 }
+

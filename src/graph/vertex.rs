@@ -12,7 +12,7 @@ impl Vertex {
     pub fn new(id: VertexId, edges: Vec<EdgeId>) -> Self {
         Vertex {
             id,
-            edges
+            edges,
         }
     }
 
@@ -28,7 +28,7 @@ impl Vertex {
         self.edges.len()
     }
 
-    pub fn add_edge(& mut self, id: EdgeId) -> () {
+    pub fn add_edge(&mut self, id: EdgeId) -> () {
         self.edges.push(id);
     }
 }
