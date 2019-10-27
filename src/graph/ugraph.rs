@@ -30,7 +30,7 @@ impl UndirectedGraph {
 }
 
 impl Graph for UndirectedGraph {
-    fn read_from_file(file: &File) -> UndirectedGraph {
+    fn new(file: &File) -> UndirectedGraph {
         let reader = BufReader::new(file);
 
         let mut graph: UndirectedGraph = UndirectedGraph {

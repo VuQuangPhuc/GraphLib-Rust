@@ -16,14 +16,14 @@ pub mod ugraph;
 
 pub fn create_undirected_graph(file: File) -> UndirectedGraph {
     let now = Instant::now();
-    let graph: UndirectedGraph = Graph::read_from_file(&file);
+    let graph: UndirectedGraph = Graph::new(&file);
     println!("{}", now.elapsed().as_micros());
 
     graph
 }
 
 pub trait Graph {
-    fn read_from_file(file: &File) -> Self;
+    fn new(file: &File) -> Self;
     fn find_strong_connected_components(&self) -> ();
 }
 
