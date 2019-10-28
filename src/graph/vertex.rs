@@ -3,6 +3,7 @@ use crate::graph::edge::EdgeId;
 pub type VertexId = usize;
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Vertex {
     id: VertexId,
     edges: Vec<EdgeId>,

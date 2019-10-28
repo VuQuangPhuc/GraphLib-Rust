@@ -20,6 +20,7 @@ mod stack {
     use crate::graph;
     use crate::graph::Graph;
     use crate::graph::ugraph::UndirectedGraph;
+    use crate::graph::digraph::DiGraph;
 
     pub fn huge_g(mode: String, args: Vec<String>) -> () {
         let builder = thread::Builder::new()
@@ -27,12 +28,22 @@ mod stack {
             .stack_size(2048 * 1024 * 1024);
 
         let handler = builder.spawn(move || {
+            println!("JOOOOOOOOOO");
             if &mode == "undirected" {
+                println!("NOOOOOOOOOO");
                 for f in args {
                     println!("---------------------------------------");
                     let file = File::open(f).unwrap();
                     let graph: UndirectedGraph = graph::create_undirected_graph(file);
-                    graph.find_strong_connected_components();
+                    graph.find_strongly_connected_components();
+                }
+            } else if &mode == "directed" {
+                println!("JOOOOOOOOOO");
+                for f in args {
+                    println!("***************************************");
+                    let file = File::open(f).unwrap();
+                    let graph: DiGraph = graph::create_directed_graph(file);
+                    graph.find_strongly_connected_components();
                 }
             }
         }).unwrap();
