@@ -1,4 +1,5 @@
 use crate::graph::vertex::VertexId;
+use std::fmt::{Display, Formatter, Error};
 
 pub type EdgeId = usize;
 
@@ -32,5 +33,11 @@ impl Edge {
         } else {
             &self.start
         }
+    }
+}
+
+impl Display for Edge {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        write!(f, "{} {}", self.start, self.end)
     }
 }

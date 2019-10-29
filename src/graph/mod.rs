@@ -1,13 +1,14 @@
 use crate::graph::vertex::{Vertex, VertexId};
 use crate::graph::edge::{Edge, EdgeId};
 use std::fs::File;
-use std::io::{BufReader, BufRead};
+use std::io::{BufReader, BufRead, Write, LineWriter};
 use std::io;
 
 mod vertex;
 mod edge;
 
 pub mod components;
+pub mod random;
 
 macro_rules! vertex {
     ($id:expr) => {
@@ -21,6 +22,7 @@ macro_rules! edge {
     };
 }
 
+#[derive(Debug)]
 pub struct Graph {
     directed: bool,
     vertices: Vec<Vertex>,
@@ -122,5 +124,15 @@ impl Graph {
                 &self.vertices[*self.edges[x].start()]
             })
             .collect()
+    }
+
+    pub fn write_to_file(&self, filename: &str) -> () {
+        let file = File::create(filename).unwrap();
+        let mut file = LineWriter::new(file);
+        file.write_all(format!("{}\n", self.vertices.len()).as_bytes()).expect("Could not write vertex number to file.");
+        for edge in &self.edges {
+            file.write_all(format!("{}\n", edge).as_bytes()).expect("Could not write edge to file.");
+        }
+        file.flush().expect("Could not write file.");
     }
 }

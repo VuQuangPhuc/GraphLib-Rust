@@ -16,4 +16,3 @@ cargo run --release {undirected|directed} path_to_file
 
 ## Test files
 Test files can be found at the [original repository](https://github.com/DanielWochnik/CombOptWS2018/tree/master/input).
-Support for generating random graphs is coming soon.
