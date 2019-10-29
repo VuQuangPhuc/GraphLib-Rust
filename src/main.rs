@@ -49,7 +49,7 @@ mod stack {
                     create_random_graph(&mut graph, vertices_number, probability);
                 }
                 graph.write_to_file(file_name);
-                println!("{:?}", graph);
+//                println!("{:?}", graph);
             }
         }).unwrap();
 
