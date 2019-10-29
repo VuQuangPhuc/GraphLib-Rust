@@ -17,6 +17,7 @@ mod stack {
     use std::fs::File;
     use std::time::Instant;
     use crate::graph::random::{create_random_directed_graph, create_random_graph};
+    use crate::graph::components::write_components_to_file;
 
     pub fn huge_g(mode: String, args: Vec<String>) -> () {
         let builder = thread::Builder::new()
@@ -32,6 +33,7 @@ mod stack {
                     let components = graph.search_for_components();
                     println!("Time elapsed: {}.", now.elapsed().as_micros());
                     println!("Found {} components.", components.len());
+                    write_components_to_file(components);
 //                println!("{:?}", components);
                 }
             } else if &mode == "random" {

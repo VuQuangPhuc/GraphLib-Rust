@@ -1,5 +1,7 @@
 use crate::graph::Graph;
 use crate::graph::vertex::VertexId;
+use std::fs::File;
+use std::io::{LineWriter, Write};
 
 pub fn find_connected_components(graph: &Graph) -> Vec<Vec<&VertexId>> {
     undirected_graph::find_connected_component(graph)
@@ -7,6 +9,20 @@ pub fn find_connected_components(graph: &Graph) -> Vec<Vec<&VertexId>> {
 
 pub fn find_strongly_connected_components(graph: &Graph) -> Vec<Vec<&VertexId>> {
     directed_graph::find_strongly_connected_components(graph)
+}
+
+pub fn write_components_to_file(components: Vec<Vec<&VertexId>>) -> () {
+    let file = File::create("output").expect("Could not create file when writing components.");
+    let mut file = LineWriter::new(file);
+    for component in components {
+        let vertices: Vec<String> = component
+            .iter()
+            .map(|&x| format!("{}", *x as i32))
+            .collect();
+        let line: String = vertices.join(" ") + "\n";
+        file.write_all(line.as_bytes()).expect("Could not write file.");
+    }
+    file.flush().expect("Could not write component file.");
 }
 
 mod undirected_graph {
