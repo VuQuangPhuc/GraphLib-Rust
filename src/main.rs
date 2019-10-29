@@ -6,8 +6,6 @@ fn main() -> io::Result<()> {
     let mut args: Vec<String> = env::args().skip(1).collect();
     let operation = args[0].clone();
     args.drain(0..1);
-
-    println!("{}", operation);
     stack::huge_g(operation, args);
 
     Ok(())
@@ -15,12 +13,9 @@ fn main() -> io::Result<()> {
 
 mod stack {
     use std::thread;
-    use std::fs::File;
-
-    use crate::graph;
     use crate::graph::Graph;
-    use crate::graph::ugraph::UndirectedGraph;
-    use crate::graph::digraph::DiGraph;
+    use std::fs::File;
+    use std::time::Instant;
 
     pub fn huge_g(mode: String, args: Vec<String>) -> () {
         let builder = thread::Builder::new()
@@ -28,23 +23,14 @@ mod stack {
             .stack_size(2048 * 1024 * 1024);
 
         let handler = builder.spawn(move || {
-            println!("JOOOOOOOOOO");
-            if &mode == "undirected" {
-                println!("NOOOOOOOOOO");
-                for f in args {
-                    println!("---------------------------------------");
-                    let file = File::open(f).unwrap();
-                    let graph: UndirectedGraph = graph::create_undirected_graph(file);
-                    graph.find_strongly_connected_components();
-                }
-            } else if &mode == "directed" {
-                println!("JOOOOOOOOOO");
-                for f in args {
-                    println!("***************************************");
-                    let file = File::open(f).unwrap();
-                    let graph: DiGraph = graph::create_directed_graph(file);
-                    graph.find_strongly_connected_components();
-                }
+            for file_name in args {
+                let now = Instant::now();
+                let file = File::open(file_name).unwrap();
+                let graph = Graph::read_from_file(&mode == "directed", file);
+                let components = graph.search_for_components();
+                println!("Time elapsed: {}.", now.elapsed().as_micros());
+                println!("Found {} components.", components.len());
+//                println!("{:?}", components);
             }
         }).unwrap();
 

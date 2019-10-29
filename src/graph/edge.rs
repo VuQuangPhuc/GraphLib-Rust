@@ -10,16 +10,12 @@ pub struct Edge {
 }
 
 impl Edge {
-    pub fn new(id: EdgeId, vertex_a: VertexId, vertex_b: VertexId) -> Self {
+    pub fn new(id: EdgeId, start: VertexId, end: VertexId) -> Self {
         Edge {
             id,
-            start: vertex_a,
-            end: vertex_b,
+            start,
+            end,
         }
-    }
-
-    pub fn id(&self) -> &EdgeId {
-        &self.id
     }
 
     pub fn start(&self) -> &VertexId {
@@ -30,15 +26,11 @@ impl Edge {
         &self.end
     }
 
-    pub fn get_other_vertex(&self, vertex: VertexId) -> &VertexId {
-        if self.start == vertex {
+    pub fn get_other_vertex(&self, vertex: &VertexId) -> &VertexId {
+        if self.start == *vertex {
             &self.end
         } else {
             &self.start
         }
-    }
-
-    fn is_adjacent(&self, vertex: VertexId) -> bool {
-        vertex == self.start || vertex == self.end
     }
 }

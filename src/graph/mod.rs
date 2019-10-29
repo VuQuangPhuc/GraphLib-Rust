@@ -1,39 +1,43 @@
-use std::fs::File;
-use std::io;
-use std::io::{BufRead, BufReader};
-use std::time::Instant;
-
-use crate::graph::ugraph::UndirectedGraph;
-use crate::graph::vertex::{VertexId, Vertex};
+use crate::graph::vertex::{Vertex, VertexId};
 use crate::graph::edge::{Edge, EdgeId};
-use crate::graph::digraph::DiGraph;
+use std::fs::File;
+use std::io::{BufReader, BufRead};
+use std::io;
 
 mod vertex;
 mod edge;
 
-pub mod ugraph;
-pub mod digraph;
+pub mod components;
 
-pub fn create_undirected_graph(file: File) -> UndirectedGraph {
-    let now = Instant::now();
-    let mut graph: UndirectedGraph = UndirectedGraph::new(Vec::new(), Vec::new());
-    graph.read_from_file(&file);
-    println!("{}", now.elapsed().as_micros());
-
-    graph
+macro_rules! vertex {
+    ($id:expr) => {
+        Vertex::new($id, Vec::new())
+    };
 }
 
-pub fn create_directed_graph(file: File) -> DiGraph {
-    let now = Instant::now();
-    let mut graph: DiGraph = DiGraph::new(Vec::new(), Vec::new());
-    graph.read_from_file(&file);
-    println!("{}", now.elapsed().as_micros());
-
-    graph
+macro_rules! edge {
+    ($id:expr, $start:expr, $end:expr) => {
+        Edge::new($id, $start, $end)
+    };
 }
 
-pub trait Graph {
-    fn read_from_file(&mut self, file: &File) -> () {
+pub struct Graph {
+    directed: bool,
+    vertices: Vec<Vertex>,
+    edges: Vec<Edge>,
+}
+
+impl Graph {
+    pub fn new(directed: bool) -> Graph {
+        Graph {
+            directed,
+            vertices: Vec::new(),
+            edges: Vec::new(),
+        }
+    }
+
+    pub fn read_from_file(directed: bool, file: File) -> Graph {
+        let mut graph = Graph::new(directed);
         let reader = BufReader::new(file);
 
         let mut first = true;
@@ -41,57 +45,82 @@ pub trait Graph {
             if first {
                 let count: i32 = line.parse().unwrap();
                 for _ in 0..count {
-                    self.add_vertex();
+                    graph.add_vertex();
                 }
                 first = false;
             } else {
                 let vertices = line.trim().split(' ').flat_map(str::parse::<VertexId>).collect::<Vec<_>>();
-                self.add_edge(vertices[0], vertices[1]);
+                graph.add_edge(vertices[0], vertices[1]);
             }
+        };
+
+        graph
+    }
+
+    pub fn search_for_components(&self) -> Vec<Vec<&VertexId>> {
+        if self.directed {
+            components::find_strongly_connected_components(&self)
+        } else {
+            components::find_connected_components(&self)
         }
     }
+
     fn add_vertex(&mut self) -> VertexId {
         let id = self.get_free_vertex_id();
-        let vertex = Vertex::new(id, Vec::new());
-        self.get_vertices_as_mut().push(vertex);
+        let vertex = vertex!(id);
+        self.vertices.push(vertex);
 
         id
     }
 
-    fn add_edge(&mut self, vertex_a: VertexId, vertex_b: VertexId) -> EdgeId {
+    fn get_free_vertex_id(&self) -> VertexId {
+        self.vertices.len()
+    }
+
+    fn add_edge(&mut self, start: VertexId, end: VertexId) -> EdgeId {
         let id = self.get_free_edge_id();
-        let edge = Edge::new(id, vertex_a, vertex_b);
-        self.get_vertices_as_mut()[vertex_a].add_edge(id);
-        self.get_vertices_as_mut()[vertex_b].add_edge(id);
-        self.get_edges_as_mut().push(edge);
+        let edge = edge!(id, start, end);
+        self.vertices[start].add_edge(id);
+        self.vertices[end].add_edge(id);
+        self.edges.push(edge);
 
         id
     }
 
-    fn get_free_vertex_id(&mut self) -> VertexId {
-        self.get_vertices().len() as VertexId
+    fn get_free_edge_id(&self) -> EdgeId {
+        self.edges.len()
     }
-
-    fn get_free_edge_id(&mut self) -> EdgeId {
-        self.get_edges().len() as EdgeId
-    }
-
-    fn get_vertices(&self) -> &Vec<Vertex>;
-    fn get_edges(&self) -> &Vec<Edge>;
-
-    fn get_vertices_as_mut(&mut self) -> &mut Vec<Vertex>;
-    fn get_edges_as_mut(&mut self) -> &mut Vec<Edge>;
-
 
     fn get_neighbours(&self, vertex: &Vertex) -> Vec<&Vertex> {
-        let neighbours: Vec<&Vertex> = vertex.edges()
+        vertex.edges()
             .iter()
-            .map(|&x| self.get_edges()[x].get_other_vertex(*vertex.id()))
-            .map(|&x| &self.get_vertices()[x])
-            .collect();
-        neighbours
+            .map(|&x| {
+                &self.vertices[*self.edges[x].get_other_vertex(vertex.id())]
+            })
+            .collect()
     }
 
-    fn find_strongly_connected_components(&self) -> ();
-}
+    fn reachable_vertices(&self, vertex: &Vertex) -> Vec<&Vertex> {
+        vertex.edges()
+            .iter()
+            .filter(|&&x| {
+                vertex.id() == self.edges[x].start()
+            })
+            .map(|&x| {
+                &self.vertices[*self.edges[x].end()]
+            })
+            .collect()
+    }
 
+    fn accessible_from(&self, vertex: &Vertex) -> Vec<&Vertex> {
+        vertex.edges()
+            .iter()
+            .filter(|&&x| {
+                vertex.id() == self.edges[x].end()
+            })
+            .map(|&x| {
+                &self.vertices[*self.edges[x].start()]
+            })
+            .collect()
+    }
+}

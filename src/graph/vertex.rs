@@ -1,9 +1,8 @@
-use crate::graph::edge::EdgeId;
+use crate::graph::edge::{EdgeId};
 
 pub type VertexId = usize;
 
 #[derive(Debug)]
-#[derive(Clone)]
 pub struct Vertex {
     id: VertexId,
     edges: Vec<EdgeId>,
@@ -25,11 +24,7 @@ impl Vertex {
         &self.edges
     }
 
-    fn num_edges(&self) -> usize {
-        self.edges.len()
-    }
-
-    pub fn add_edge(&mut self, id: EdgeId) -> () {
-        self.edges.push(id);
+    pub fn add_edge(&mut self, edge: EdgeId) -> () {
+        self.edges.push(edge);
     }
 }
